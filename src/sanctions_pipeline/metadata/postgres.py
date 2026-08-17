@@ -166,3 +166,45 @@ def update_acquisition_run(
         )
 
     conn.commit()
+
+
+def create_validation_result(
+    conn,
+    validation_id: str,
+    artifact_id: str,
+    validation_status: str,
+    validation_errors: str | None = None,
+    record_count: int | None = None,
+) -> None:
+    """
+    Create a validation result record.
+    """
+
+    with conn.cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO validation_results (
+                validation_id,
+                artifact_id,
+                validation_status,
+                validation_errors,
+                record_count
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            """,
+            (
+                validation_id,
+                artifact_id,
+                validation_status,
+                validation_errors,
+                record_count,
+            ),
+        )
+
+    conn.commit()
