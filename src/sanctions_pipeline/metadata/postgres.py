@@ -208,3 +208,49 @@ def create_validation_result(
         )
 
     conn.commit()
+
+
+def create_quarantine_event(
+    conn,
+    quarantine_id: str,
+    artifact_id: str,
+    reason: str,
+    quarantine_bucket: str,
+    quarantine_key: str,
+    quarantine_checksum: str,
+) -> None:
+    """
+    Create a successful quarantine event record.
+    """
+
+    with conn.cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO quarantine_events (
+                quarantine_id,
+                artifact_id,
+                reason,
+                quarantine_bucket,
+                quarantine_key,
+                quarantine_checksum
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            """,
+            (
+                quarantine_id,
+                artifact_id,
+                reason,
+                quarantine_bucket,
+                quarantine_key,
+                quarantine_checksum,
+            ),
+        )
+
+    conn.commit()
