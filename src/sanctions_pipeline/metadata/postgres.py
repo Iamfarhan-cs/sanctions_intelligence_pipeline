@@ -1,4 +1,5 @@
-import os
+﻿import os
+from typing import Any
 
 import psycopg
 from dotenv import load_dotenv
@@ -254,3 +255,49 @@ def create_quarantine_event(
         )
 
     conn.commit()
+
+def get_artifact_with_latest_validation(
+    conn,
+    artifact_id: str,
+) -> dict[str, Any] | None:
+    """
+    Retrieve artifact metadata together with its latest validation result.
+    """
+
+    with conn.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                a.artifact_id,
+                a.run_id,
+                a.file_format,
+                a.storage_bucket,
+                a.storage_key,
+                v.validation_status
+            FROM artifacts AS a
+            LEFT JOIN LATERAL (
+                SELECT
+                    validation_status
+                FROM validation_results
+                WHERE artifact_id = a.artifact_id
+                ORDER BY validated_at DESC
+                LIMIT 1
+            ) AS v ON TRUE
+            WHERE a.artifact_id = %s
+            """,
+            (artifact_id,),
+        )
+
+        row = cursor.fetchone()
+
+    if row is None:
+        return None
+
+    return {
+        "artifact_id": row[0],
+        "run_id": row[1],
+        "file_format": row[2],
+        "storage_bucket": row[3],
+        "storage_key": row[4],
+        "validation_status": row[5],
+    }
